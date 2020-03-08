@@ -28,134 +28,7 @@ namespace ns3 {
 /* ... */
 NS_LOG_COMPONENT_DEFINE("SeingNetworkAka");
   NS_OBJECT_ENSURE_REGISTERED(ServingNetworkAka);
-/*
 
-fiveGAka::fiveGAka()
-{
-        indexMap.insert(std::make_pair('0',0));
-        indexMap.insert(std::make_pair('1',1));
-        indexMap.insert(std::make_pair('2',2));
-        indexMap.insert(std::make_pair('3',3));
-        indexMap.insert(std::make_pair('4',4));
-        indexMap.insert(std::make_pair('5',5));
-        indexMap.insert(std::make_pair('6',6));
-        indexMap.insert(std::make_pair('7',7));
-        indexMap.insert(std::make_pair('8',8));   
-        indexMap.insert(std::make_pair('9',9));
-        indexMap.insert(std::make_pair('A',10));   
-        indexMap.insert(std::make_pair('B',11));
-        indexMap.insert(std::make_pair('C',12));
-        indexMap.insert(std::make_pair('D',13));
-        indexMap.insert(std::make_pair('E',14));
-        indexMap.insert(std::make_pair('F',15));
-}
-fiveGAka::~fiveGAka()
-{
-
-}
-char fiveGAka::findKey(int t)
-{
-        for(auto itr= indexMap.begin(); itr!= indexMap.end();itr++)
-                {
-                        if(itr->second == t)
-                         return    itr->first;
-                }
-        return '0';
-}
-void
-fiveGAka::StartApplication(){
-        NS_LOG_FUNCTION (this);
-         Ptr<Node> n = GetNode ();
-          Ptr<NetDevice> dev= n->GetDevice (0);
-          Ptr<NetDevice> dev1= n->GetDevice (1);
-          std::cout<<dev->GetInstanceTypeId ();
-          std::cout<<dev1->GetInstanceTypeId ();
-        std::cout<<"I m here";
-         Simulator::Schedule (Seconds(5), &fiveGAka::tttt, this,7);
-}
-void fiveGAka::tttt(int a){
-        std::cout<<"Called\n"<<a;
-}
-
-   
-TypeId fiveGAka::GetTypeId()
-{
-    static TypeId tid = TypeId("ns3::fiveGAka")
-                .SetParent <Application> ()
-                .AddConstructor<fiveGAka> ()
-                 ;
-    return tid;
-}
-
-TypeId fiveGAka::GetInstanceTypeId() const
-{
-    return fiveGAka::GetTypeId();
-}
-//Encrytion algo 
-std::string fiveGAka::aes(std::string publicKey,std::string supi,std::string freshKey,std::string snid)
-{
-        std::string ans="";
-        for( unsigned int i=0; i<publicKey.size();i++)
-        {
-                int t= indexMap[publicKey[i]]^indexMap[supi[i]]^indexMap[freshKey[i]]^indexMap[snid[i]];                
-                ans +=  findKey(t%16); 
-        }
-        return ans;
-} 
-std::string fiveGAka::comple(std::string r1)
-{
-        
-        std::string ans="";
-        for( unsigned int i=0; i<r1.size(); i++)
-         {
-               int t = 15 - indexMap[r1[i]];
-               ans +=  findKey(t);              
-         }
-	return ans;
-}    
-std::string fiveGAka::add(std::string r1,std::string r2)
-{
-        if(r1.size()!=r2.size())
-                return NULL;   
-        std::string ans="";
-        for( unsigned int i=0; i<r1.size(); i++)
-         {
-               int t = (indexMap[r1[i]]+indexMap[r2[i]])%16;
-               ans +=  findKey(t); 
-        }             
-        
-	return ans;
-}
-std::string fiveGAka::rotr(std::string r, int sumDigit)
-{
-        std::string ans="";
-        for( unsigned int i=sumDigit; i<r.size(); i++)
-                ans+=r[i];
-        for( int i=0; i<sumDigit; i++)
-                ans+=r[i];
-	
-	return ans;
-}
-std::string fiveGAka::freshkey(std::string r1, std::string r2)
-{
-        int sumDigit = 0;
-        for(unsigned int i=0; i<r1.size(); i++)
-        {
-                sumDigit += indexMap[r1[i]];
-                std::cout<<sumDigit<<" "<<r1[i]<<"  "<<i<<std::endl;
-        }
-        std::cout<<"\n Individual Addition:"<<sumDigit;
-        sumDigit = sumDigit % r2.size();
-        std::cout<<"\n Mod:"<<sumDigit;
-        std::string rotate = rotr(r2, sumDigit );
-	std::cout<<"\nRotation :"<<rotate;
-        std::string addition = add(r1,rotate);
-        std::cout<<"\n  Addition:"<<addition;
-        std::string com = comple(addition);
-        std::cout<<"\n  Compl:"<<com;
-        return com;
-}
-*/
 typedef unsigned char u8;
 ServingNetworkAka::~ServingNetworkAka ()
 {
@@ -181,9 +54,11 @@ ServingNetworkAka::StartApplication (void)
 {
     n = GetNode ();
     uint16_t sinkPort = 20000;
+
     for(unsigned int i=0;i<16;i++)
         R1[i] = 0x63;
     // send to UE
+    
     ue.setString(R1,suci);
     
     
@@ -194,10 +69,26 @@ ServingNetworkAka::StartApplication (void)
     }
     std::cout<<"\nSUCI in SN\n";
 
+  //send to HN
+  // Will send xmac,hres,ek
+  u8 xmac[8],hres[32],ek[32],resUE[32];
+  hn.setString(R1,suci,xmac,hres,ek);
 
+  // UE Calculation only x amc is passed returns true or false
+  //Also assign res value 
+  bool macVerification = ue.calculation(xmac,resUE);
+  bool resVerification = true; 
+  std::cout<<"\n Verification at UE at SN :"<<macVerification<<std::endl;
+  std::cout<<"\nRES Token Verification At SN:\n";
+  for(unsigned int i=0;i<8;i++)
+  {
+    std::cout<<int(resUE[i])<<" "<<(int(hres[i]))<<std::endl;
+    if((int(resUE[i])) != (int(hres[i])) )
+        resVerification = false;
+    }
+  std::cout<<"\n Verification at UE at SN :"<<resVerification<<std::endl;
 
-
-   PacketSinkHelper packetSinkHelper ("ns3::TcpSocketFactory", InetSocketAddress (Ipv4Address::GetAny (), sinkPort));
+  PacketSinkHelper packetSinkHelper ("ns3::TcpSocketFactory", InetSocketAddress (Ipv4Address::GetAny (), sinkPort));
   ApplicationContainer m_peer = packetSinkHelper.Install (n);
   //ApplicationContainer sinkApps1 = packetSinkHelper.Install (enbNodes.Get (0));
   m_peer.Start (Seconds (0.));
@@ -240,11 +131,11 @@ ServingNetworkAka::SendPacket (void)
   Ptr<Packet> packet = Create<Packet> (m_packetSize);
   NS_LOG_FUNCTION (this);
     //Setup transmission parameters
-    MyHeader h1;
+    /*MyHeader h1;
  
   h1.SetData (10);
 // Fill out udpHeader fields appropriately
-packet->AddHeader (h1);
+packet->AddHeader (h1);*/
   CustomDataTag tag;
     tag.SetNodeId (5) ;
     //tag.SetPosition ( GetNode()->GetObject<MobilityModel>()->GetPosition());
@@ -268,7 +159,24 @@ AsciiTraceHelper asciiTraceHelper;
 
 ServingNetworkAka::ServingNetworkAka ()
 {
- 
+  nodes.Create(1);
+  enbPositionAlloc = CreateObject<ListPositionAllocator> ();
+  enbPositionAlloc->Add (Vector (0.0, 0.0, 0.0));
+  enbmobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
+  enbmobility.SetPositionAllocator (enbPositionAlloc);
+  enbmobility.Install (nodes);
+  for(unsigned int i=0;i<16;i++)
+      R1[i] = 0x63;
+    // send to UE
+}
+void ServingNetworkAka::getR1(u8 R[])
+{
+ for(unsigned int i=0;i<16;i++)
+      R[i] = R1[i];
+}
+NodeContainer ServingNetworkAka::getNode()
+{
+  return nodes;
 }
 /*def singleKeyGenerate( rand1, rand):
 	sumDigit=0

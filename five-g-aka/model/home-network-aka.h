@@ -44,31 +44,23 @@ public:
   std::string freshkey (std::string, std::string);
   std::string aes (std::string, std::string, std::string, std::string);
 };*/
+typedef unsigned char u8;
 class homeNetwork 
 {
 public:
   homeNetwork ();
-  virtual ~homeNetwork ();
- void ReceivePacket (Ptr<NetDevice>, Ptr<const Packet>,uint16_t, const Address);
-
-  void Setup (Ptr<Socket> socket, Address address, uint32_t packetSize, uint32_t nPackets, DataRate dataRate);
+   ~homeNetwork ();
+ void setString(u8[],u8[],u8[8],u8[32],u8[32]);
 
 private:
-  virtual void StartApplication (void);
-  virtual void StopApplication (void);
-  std::string R1;
-  void ScheduleTx (void);
-  void SendPacket (void);
-  Ptr<NetDevice> dev;
-  Ptr<Node> n;
-  Ptr<Socket>     m_socket;
-  Address         m_peer;
-  uint32_t        m_packetSize;
-  uint32_t        m_nPackets;
-  DataRate        m_dataRate;
-  EventId         m_sendEvent;
-  bool            m_running;
-  uint32_t        m_packetsSent;
+  u8 r1[16];
+  u8 r2[16];
+  u8 key[16];
+  u8 supi[16];
+  u8 amf[2];
+  u8 mac_c[8];
+  void calculation(u8[],u8[],u8[8],u8[32],u8[32]);
+
 };
 
 

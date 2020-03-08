@@ -20,13 +20,14 @@
 #include <string>
 #include <iostream>
 #include "ns3/application.h"
+typedef unsigned char u8;
 namespace ns3 {
 class MyHeader : public Header
 {
 public:
   // new methods
-  void SetData (uint16_t data);
-  uint16_t GetData (void);
+  void SetData (u8[],uint16_t);
+  void GetData (u8[]);
   virtual TypeId GetInstanceTypeId(void) const;
   // new method needed
   static  TypeId GetTypeId (void);
@@ -37,7 +38,8 @@ public:
   virtual uint32_t Deserialize (Buffer::Iterator start);
   virtual void Print (std::ostream &os) const;
 private:
-  uint16_t m_data;
+  uint16_t m_length;
+  u8 m_data[32];
 };
 }
 #endif

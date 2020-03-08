@@ -14,7 +14,9 @@ def build(bld):
         'helper/five-g-aka-helper.cc',
         'model/serving-network-aka.cc',
         'model/user-equipment-aka.cc',
-        'model/myheader.cc'
+        'model/home-network-aka.cc',
+        'model/myheader.cc',
+        'model/sha256.cc'
         ]
 
     module_test = bld.create_ns3_module_test_library('five-g-aka')
@@ -29,8 +31,10 @@ def build(bld):
         'model/custom-data-tag.h',
         'helper/five-g-aka-helper.h',
         'model/serving-network-aka.h',
+        'model/home-network-aka.h',
         'model/user-equipment-aka.h',
-        'model/myheader.h'
+        'model/myheader.h',
+        'model/sha256.h'
         ]
 
     if bld.env.ENABLE_EXAMPLES:

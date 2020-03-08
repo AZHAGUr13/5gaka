@@ -24,26 +24,7 @@
 namespace ns3 {
 
 /* ... */
-/*class fiveGAka : public ns3::Application
-{
-  std::string rotr (std::string, int);
-  std::string comple (std::string);
-  std::string add (std::string, std::string);
-  char findKey (int);
 
-public:
-  static TypeId GetTypeId (void);
-  fiveGAka ();
-  ~fiveGAka ();
-  void tttt (int);
-  virtual TypeId GetInstanceTypeId (void) const;
-  void StartApplication ();
-
-  std::map<char, int> indexMap;
-  // fiveGAka();
-  std::string freshkey (std::string, std::string);
-  std::string aes (std::string, std::string, std::string, std::string);
-};*/
 typedef unsigned char u8;
 class UserEqupi 
 {
@@ -51,13 +32,20 @@ public:
   UserEqupi ();
    ~UserEqupi ();
 void setString(u8[],u8[]);
-
+bool calculation(u8[],u8[]);
+NodeContainer getNode();
 private:
   u8 R2[16];
+  u8 R1[16];
+  u8 key[16];
   u8 amf[2];
   u8 supi[16];
   u8 suci[8];
-  u8 R1[16];
+  NodeContainer nodes;
+  MobilityHelper uemobility;
+  Ptr<ListPositionAllocator> uePositionAlloc;
+  
+  
  
 };
 

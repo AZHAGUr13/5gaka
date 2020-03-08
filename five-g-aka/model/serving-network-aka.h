@@ -5,7 +5,7 @@
 #include <ns3/header.h>
 #include "ns3/point-to-point-module.h"
 #include "ns3/user-equipment-aka.h"
-//#include "home-network-aka.h"
+#include "home-network-aka.h"
 #include "ns3/mmwave-helper.h"
 #include "ns3/epc-helper.h"
 #include "ns3/mmwave-point-to-point-epc-helper.h"
@@ -25,45 +25,30 @@
 #include "ns3/application.h"
 namespace ns3 {
 
-/* ... */
-/*class fiveGAka : public ns3::Application
-{
-  std::string rotr (std::string, int);
-  std::string comple (std::string);
-  std::string add (std::string, std::string);
-  char findKey (int);
 
-public:
-  static TypeId GetTypeId (void);
-  fiveGAka ();
-  ~fiveGAka ();
-  void tttt (int);
-  virtual TypeId GetInstanceTypeId (void) const;
-  void StartApplication ();
 
-  std::map<char, int> indexMap;
-  // fiveGAka();
-  std::string freshkey (std::string, std::string);
-  std::string aes (std::string, std::string, std::string, std::string);
-};*/
-
-  typedef unsigned char u8;
+typedef unsigned char u8;
 class ServingNetworkAka : public Application
 {
 public:
   ServingNetworkAka ();
   virtual ~ServingNetworkAka ();
- void ReceivePacket (Ptr<NetDevice>, Ptr<const Packet>,uint16_t, const Address);
-
+  void ReceivePacket (Ptr<NetDevice>, Ptr<const Packet>,uint16_t, const Address);
   void Setup (Ptr<Socket> socket, Address address, uint32_t packetSize, uint32_t nPackets, DataRate dataRate);
-
+  NodeContainer getNode();
+  void getR1(u8[]);
 private:
-  virtual void StartApplication (void);
-  virtual void StopApplication (void);
+  
+  NodeContainer nodes;
+  MobilityHelper enbmobility;
+  Ptr<ListPositionAllocator> enbPositionAlloc;
+  
   u8 R1[16];
   u8 suci[8];
   UserEqupi ue;
-  //homeNetwork hn;
+   homeNetwork hn;
+   virtual void StartApplication (void);
+  virtual void StopApplication (void);
   void ScheduleTx (void);
   void SendPacket (void);
   Ptr<NetDevice> dev;

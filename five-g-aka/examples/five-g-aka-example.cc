@@ -26,10 +26,10 @@ static void Rx (Ptr<OutputStreamWrapper> stream, Ptr<const Packet> packet, const
 {
   *stream->GetStream () << Simulator::Now ().GetSeconds () << "\t" << packet->GetSize () << std::endl;
   CustomDataTag tag;
-  MyHeader header;
+  /*MyHeader header;
 uint32_t kk=packet->PeekHeader (header);
 std::cout<<header.GetData ()<<"  "<<kk<<std::endl;
-header.Print(std::cout);
+header.Print(std::cout);*/
     if (packet->PeekPacketTag (tag))
     {
         std::cout<<"\tFrom Node Id: " << tag.GetNodeId() 
@@ -140,7 +140,7 @@ Ptr<MmWaveUeNetDevice> jj= CreateObject<MmWaveUeNetDevice> ();
 
   Address sinkAddress (InetSocketAddress (ueIpIface.GetAddress (0), sinkPort));
   PacketSinkHelper packetSinkHelper ("ns3::TcpSocketFactory", InetSocketAddress (Ipv4Address::GetAny (), sinkPort));
-  ApplicationContainer sinkApps = packetSinkHelper.Install (enbNodes.Get (0));
+  ApplicationContainer sinkApps = packetSinkHelper.Install (ueNodes.Get (0));
   ApplicationContainer sinkApps1 = packetSinkHelper.Install (enbNodes.Get (0));
   sinkApps.Start (Seconds (0.));
   sinkApps.Stop (Seconds (simStopTime));

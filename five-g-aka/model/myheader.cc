@@ -37,35 +37,56 @@ TypeId MyHeader::GetInstanceTypeId (void) const
   return MyHeader::GetTypeId ();
 }
 void 
-MyHeader::SetData (uint16_t data)
+MyHeader::SetData (u8 r[],uint16_t data)
 {
-  m_data = data;
+   m_length = data;
+   for(unsigned int i=0;i<data;i++)
+   {
+     m_data[i] = r[i];
+   }
 }
-uint16_t
-MyHeader::GetData (void)
+void
+MyHeader::GetData (u8 r[])
 {
-  return m_data;
+  for(unsigned int i=0;i<16;i++)
+   {
+      r[i] = m_data[0] ;
+      std::cout<<int(r[i])<<" ";
+   }
+   std::cout<<std::endl;
 }
 uint32_t 
 MyHeader::GetSerializedSize (void) const
 {
-  // two bytes of data to store
+  // 2 bytes of data to store
   return 2;
 }
 void 
 MyHeader::Serialize (Buffer::Iterator start) const
 {
-  start.WriteHtonU16 (m_data);
+  //for(unsigned int i=0;i<16;i++)
+   //{
+       start.WriteHtonU16 (m_data[0]);
+   //}
+ 
 }
 uint32_t 
 MyHeader::Deserialize (Buffer::Iterator start)
 {
-  m_data = start.ReadNtohU16 ();
-  return 2;
+  for(unsigned int i=0;i<16;i++)
+   {
+      m_data[i]= start.ReadNtohU16 ();
+   }
+ 
+  return 20;
 }
 void 
 MyHeader::Print (std::ostream &os) const
 {
-  os << m_data;
+  for(unsigned int i=0;i<m_length;i++)
+   {
+     os << m_data[i];
+   }
+  
 }
 }

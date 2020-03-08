@@ -17,11 +17,81 @@
 #include "ns3/custom-data-tag.h"
 #include "ns3/net-device.h"
 #include "ns3/myheader.h"
+#include "sha256.h"
 #include<string>
 #include<map>
 #include<iostream>
 #include "ns3/log.h"
 #include "ns3/simulator.h"
+typedef unsigned char u8;
+void comple(u8 r1[],u8 fresh[])
+{
+        for( unsigned int i=0; i<16; i++)
+         {
+              fresh[i]=0xff-r1[i];            
+         }
+
+}/* Complement function end*/  
+/* addition function*/
+void  add(u8 r1[],u8 r2[],u8 addition[])
+{
+          
+        
+  for( unsigned int i=0; i<16; i++)
+  {
+    addition[i] = (r1[i]+r2[i]) % 32;
+  }             
+        
+	
+}/* Addtion function end */
+void rotr(u8 r[], unsigned int sumDigit,u8 rotation[])
+{
+        unsigned int k=0;
+        for( unsigned int i=sumDigit; i<16; i++)
+        {
+          rotation[k++]=r[i];
+        }
+                
+        for(unsigned int i=0; i<sumDigit; i++)
+          rotation[k++]=r[i];
+        
+
+	
+}
+void freshkey(u8 r1[], u8 r2[],u8 fresh[])
+{
+        unsigned int sumDigit = 0;
+        u8 rotation[16],adddition[16];
+        std::cout<<"\nIndividual Addition\n";
+        for(unsigned int i=0; i<16; i++)
+        {
+               sumDigit +=  r1[i];
+                
+                std::cout<<sumDigit<<" "<<int(r1[i])<<std::endl;
+        }
+       
+        sumDigit = sumDigit % 16;
+        std::cout<<"\n Mod:"<<sumDigit;
+        rotr(r2, sumDigit,rotation );
+        std::cout<<"\nRotation :\n";
+        for(unsigned int i=0;i<16;i++)
+        {
+          std::cout<<int(rotation[i])<<" ";
+        }
+        add(r1,rotation,adddition);
+        std::cout<<"\nAddition :\n";
+        for(unsigned int i=0;i<16;i++)
+        {
+          std::cout<<int(adddition[i])<<" ";
+        }
+         comple(adddition,fresh);
+        std::cout<<"\ncompl :\n";
+        for(unsigned int i=0;i<16;i++)
+        {
+          std::cout<<int(fresh[i])<<" ";
+        }
+        
+}
 namespace ns3 {
 
 /* ... */
@@ -453,9 +523,20 @@ UserEqupi::UserEqupi ()
 {
   for(unsigned int i=0;i<16;i++)
      {
-       R2[i] =0x56;
+        R2[i] =0x56;
         supi[i]=0xfa;
+        key[i] = 0x2f;
      }
+  nodes.Create(1);
+  uePositionAlloc = CreateObject<ListPositionAllocator> ();
+  uePositionAlloc->Add (Vector (30.0, 0.0, 0.0));
+  uemobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
+  uemobility.SetPositionAllocator (uePositionAlloc);
+  uemobility.Install (nodes);
+}
+NodeContainer UserEqupi::getNode()
+{
+  return nodes;
 }
 void 
 UserEqupi::setString(u8 a[],u8 suciSN[])
@@ -463,32 +544,81 @@ UserEqupi::setString(u8 a[],u8 suciSN[])
   for(unsigned int i=0;i<16;i++)
       R1[i] = a[i];
 
-  // calculate SUCI
-
-    f1(supi,R1,R2,amf,suci);
+  // calculate SUCI NULL Encryption
+  for(unsigned int i=0;i<16;i++)
+      suci[i] = supi[i];
+    
     // printing sci
     for(unsigned int i=0;i<8;i++)
     {
       
        suciSN[i] = suci[i];
-      std::cout<<int(suci[i])<<" "<<suciSN[i]<<std::endl;
+      std::cout<<int(suci[i])<<" "<<int(suciSN[i])<<std::endl;
     }
     std::cout<<"\nSUCI in UE\n";
 
 }
+bool 
+UserEqupi::calculation(u8 xamc[],u8 resUE[])
+{
+  // calculate fresh key from two random numbers
+  unsigned int k = R1[15];
+  u8 mac_u[8],amf[2];;
+  u8 fresh[16];
+  for (unsigned int i=0;i<k;i++)
+  {
+    freshkey(R1,R2,fresh);
+    for(unsigned int j=0; j<16; j++)
+    {
+      R1[j]= R2[j];
+    }
+    for(unsigned int j=0; j<16; j++)
+    {
+      R2[j]= fresh[j];
+    }
+  } //calculate fresh key from two random numbers
+  /*RES */
+u8 FC = 0x6b;
+    u8 p0 = 0x6c; // SN name
+    u8 l0 = 0x08; //SN lenght
+    u8 l1 = 0x80; //fresh key length
+    u8 l2 = 0x80;
+    u8 ausf[32],ek[32];
+    
+    calculateRes(FC,p0,l0,fresh,l1,key,l2,resUE);
+    std::cout<<"\nHRES Token At UE from AVC:\n";
+    for(unsigned int i=0;i<32;i++)
+    {
+      std::cout<<int(resUE[i])<<" ";
+    }
+/* K ausf Token calculation */
+    FC =  0x6a;
+    calculateKausf(FC,p0,l0,fresh,l1,key,l2,ausf); // key is used as B not a part input text
+    std::cout<<"\nAUSF Token At UE:\n";
+    for(unsigned int i=0;i<32;i++)
+    {
+      std::cout<<int(ausf[i])<<" ";
+    }
+/* K seaf Token Calculation */
+   FC = 0x6c;
+  calculateKseaf(FC,p0,l0,ausf,ek);
+  std::cout<<"\nSEAF Token At UE:\n";
+    for(unsigned int i=0;i<32;i++)
+    {
+      std::cout<<int(ek[i])<<" ";
+    }
+/* EK Token calculation */
+/* Mac token calculation Verification */
+  f1(key,fresh,R1,amf,mac_u);
+  std::cout<<"\nMAC Token At UE:\n";
+        for(unsigned int i=0;i<8;i++)
+        {
+          std::cout<<int(mac_u[i])<<" "<<(int(xamc[i]))<<std::endl;
+          if((int(mac_u[i])) != (int(xamc[i])) )
+            return false;
+        }
+        return true;
+}
 
-/*def singleKeyGenerate( rand1, rand):
-	sumDigit=0
-	for i in rand1:
-		sumDigit += indexMap[i]
-	print("addition:",sumDigit)	
-	sumDigit = sumDigit % len(rand)
-	print("mod:",sumDigit)
-	rotate = rotr(rand, sumDigit )
-	print("Rotation :",rotate)
-	addition = add(rand1, rotate)
-	complement = comple(addition)
-	print("complem :",complement)
-	return complement,rand1*/
 		
 }

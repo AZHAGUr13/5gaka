@@ -5,4 +5,8 @@ def build(bld):
     obj.source = 'five-g-aka-example.cc'
     obj = bld.create_ns3_program('one-g', ['netanim','mmwave','applications','network','core','internet', 'config-store','stats','five-g-aka'])
     obj.source = 'one-g.cc'
+    obj = bld.create_ns3_program('test-send-msg', ['netanim','mmwave','applications','network','core','internet', 'config-store','stats','five-g-aka'])
+    obj.source = 'test-send-msg.cc'
+
+
 
